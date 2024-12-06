@@ -3,25 +3,22 @@ package main
 import (
 	"fmt"
 	"net/http"
-	// "os"
 )
 
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Welcome to the Home Page!")
+}
+
+func aboutHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "This is the About Page!")
+}
+
 func main() {
-	// err := http.ListenAndServe(
-	// 	":18080",
-	// 	http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 		fmt.Fprintf(w, "Hello,%s!", r.URL.Path[1:])
-	// 	}),
-	// )
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stdout, "Error: ", err)
-	// 	os.Exit(1)
-	// }
-	s := &http.Server{
-		Addr: ":18080",
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
-			fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
-		}),
-	}
-	s.ListenAndServe()
+	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/about", aboutHandler)
+
+	fmt.Println("Starting server at :8080")
+	http.ListenAndServe(":18080", nil)
 }
