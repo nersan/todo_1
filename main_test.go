@@ -4,36 +4,40 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"testing"
-	"time"
+	// "time"
+
 	"golang.org/x/sync/errgroup"
 )
 
 func TestRun(t *testing.T) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("failed to listen port %v", err)
+	}
 	// コンテキストとキャンセル関数を用意
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	// サーバーを別ゴルーチンで起動
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return run(ctx)
+		return run(ctx, l)
 	})
-
-	// サーバー起動を待つ
-	time.Sleep(100 * time.Millisecond) // 起動を待つための簡易的な遅延（本番環境では適切な同期を推奨）
 
 	// サーバーにリクエストを送信
 	in := "message"
-	resp, err := http.Get("http://localhost:18080/" + in)
+	url := fmt.Sprintf("http://%s/%s", l.Addr().String(), in)
+	t.Logf("try request to %q", url)
+	rsp, err := http.Get(url)
 	if err != nil {
 		t.Fatalf("failed to get: %+v", err)
 	}
-	defer resp.Body.Close()
+	defer rsp.Body.Close()
 
 	// レスポンスボディを読み取る
-	got, err := io.ReadAll(resp.Body)
+	got, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		t.Fatalf("failed to read body: %+v", err)
 	}
